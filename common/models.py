@@ -9,6 +9,7 @@ class TVSeries(TimeStampedModel):
     name = models.CharField(max_length=255)
     original_name = models.CharField(max_length=255)
     first_air_date = models.DateField()
+    last_air_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return '{}, {} ({})'.format(self.name, self.first_air_date.year, self.original_name)
@@ -16,7 +17,7 @@ class TVSeries(TimeStampedModel):
 
 class VkUser(TimeStampedModel):
     vk_id = models.PositiveIntegerField(unique=True)
-    tv_series = models.ManyToManyField(TVSeries, related_name='tv_series', blank=True)
+    tv_series = models.ManyToManyField(TVSeries, related_name='vk_users', blank=True)
 
     def __str__(self):
         return str(self.vk_id)

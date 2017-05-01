@@ -1,52 +1,9 @@
-from urllib.parse import urljoin
-
-import requests
 from django.http import HttpResponse
 from rest_framework.views import APIView
 
 from common.models import VkUser, TVSeriesVariants, TVSeries
-
-THEMOVIEDB = {
-    'base_url': 'https://api.themoviedb.org',
-    'api_version': 3,
-    'api_key': '9afa0e79416498e0b552082c88b29f25',
-}
-
-
-VK = {
-    'community_access_token': '313d1b9184a3e65fb7ed316019e4adee167d8b8427c577d5a75ce7d0c2a08b356ce7bb9a43ec33dbc9f1a',
-    'send_message_api_url': 'https://api.vk.com/method/messages.send',
-    'bot_view_confirmation_code': '6bbb32e8',
-}
-
-
-class MovieDbClient:
-
-    def __init__(self):
-        self.api_url = THEMOVIEDB['base_url']
-
-    def get(self, url_path, params):
-        full_url = urljoin(self.api_url, '{}/{}'.format(THEMOVIEDB['api_version'], url_path))
-        payload = {'api_key': THEMOVIEDB['api_key']}
-        payload.update(params)
-        resp = requests.get(full_url, params=payload)
-        return resp.json()
-
-    def search(self, query):
-        resp = self.get('search/tv', params={'query': query})
-        return resp['results']
-
-
-class VkMessenger:
-    def __init__(self):
-        self.access_token = VK['community_access_token']
-        self.api_url = VK['send_message_api_url']
-
-    def send_message(self, user_id, message):
-        return requests.post(self.api_url, data={
-                'access_token': self.access_token,
-                'user_id': user_id,
-                'message': message})
+from common.themoviedb_client import MovieDbClient
+from common.vk_client import VK, VkMessenger
 
 
 class HandleVkRequestView(APIView):
