@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from model_utils.models import TimeStampedModel
 
@@ -13,8 +14,18 @@ class TVSeries(TimeStampedModel):
         return '{}, {} ({})'.format(self.name, self.first_air_date.year, self.original_name)
 
 
-class User(AbstractUser):
-    tv_series = models.ManyToManyField(TVSeries, related_name='tv_series')
+class VkUser(TimeStampedModel):
+    vk_id = models.PositiveIntegerField(unique=True)
+    tv_series = models.ManyToManyField(TVSeries, related_name='tv_series', blank=True)
 
-    class Meta(AbstractUser.Meta):
-        swappable = 'AUTH_USER_MODEL'
+    def __str__(self):
+        return str(self.vk_id)
+
+
+class TVSeriesVariants(TimeStampedModel):
+    variants = JSONField()
+    vk_user = models.ForeignKey(VkUser, related_name='variants')
+
+    class Meta:
+        unique_together = [('vk_user', 'variants'), ]
+

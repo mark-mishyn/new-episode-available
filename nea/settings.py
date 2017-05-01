@@ -51,8 +51,8 @@ WSGI_APPLICATION = 'nea.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'nea',
     }
 }
 
@@ -67,4 +67,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-AUTH_USER_MODEL = 'common.User'
+AUTH_USER_MODEL = 'auth.User'
