@@ -2,9 +2,7 @@ from urllib.parse import urljoin
 
 import requests
 from django.http import HttpResponse
-from rest_framework.generics import GenericAPIView
-
-from common.serializers import HandleVkRequestSerializer
+from rest_framework.views import APIView
 
 
 THEMOVIEDB = {
@@ -50,8 +48,7 @@ class VkMessenger:
                 'message': message})
 
 
-class HandleVkRequestView(GenericAPIView):
-    serializer_class = HandleVkRequestSerializer
+class HandleVkRequestView(APIView):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -59,13 +56,12 @@ class HandleVkRequestView(GenericAPIView):
         self.vk_client = VkMessenger()
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        event_type = serializer.validated_data['type']
+        event_type = request.data['type']
 
         if event_type == 'confirmation':
             return HttpResponse(VK['bot_view_confirmation_code'])
 
-        event_data = serializer.validated_data['object']
+        event_data = request.data['object']
         self.user_id = event_data['user_id']
 
         if event_type == 'message_new':
@@ -88,20 +84,22 @@ class HandleVkRequestView(GenericAPIView):
             self.send_message(message)
 
     def search(self, query):
-        tvs = self.movie_client.search(query)
+        serials = self.movie_client.search(query)
 
-        if not tvs:
+        if not serials:
             self.send_message(
                 message='Nothing found with '"{}"', try with another search query.'.format(query))
 
         resp_message = ''
-        for tv in tvs:
-            resp_message += '{name}, {year}\n'.format(
+        for i, tv in enumerate(serials, 1):
+            resp_message += '{number}. {name}, {year}\n'.format(
+                    number=i,
                     name=tv['name'],
                     year=tv['first_air_date'].split('-', 1)[0])
 
             if tv['original_name'] != tv['name']:
                 resp_message = resp_message.replace('\n', '({})\n'.format(tv['original_name']))
+        self.send_message(resp_message)
 
     def send_message(self, message):
         return self.vk_client.send_message(user_id=self.user_id, message=message)
