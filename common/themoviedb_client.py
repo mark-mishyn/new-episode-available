@@ -28,3 +28,6 @@ class MovieDbClient:
 
     def get_details(self, tv_id):
         return self.get('/tv/{}'.format(tv_id))
+
+    def get_season_details(self, tv_id, season_id):
+        return self.get('/tv/{}/season/{}'.format(tv_id, season_id))

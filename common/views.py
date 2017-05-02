@@ -122,8 +122,9 @@ class HandleVkRequestView(APIView):
         if not tv_variants:
             return 'You have to search first'
 
-        variant_numbers = [int(n) for n in tv_variants.variants.keys()]
+        variant_numbers = tv_variants.variants.keys()
         if number not in variant_numbers:
+            variant_numbers = [int(n) for n in tv_variants.variants.keys()]
             if len(variant_numbers) == 1:
                 valid_numbers = variant_numbers[0]
             elif len(variant_numbers) == 2:
@@ -131,7 +132,7 @@ class HandleVkRequestView(APIView):
             else:
                 valid_numbers = '{}-{}'.format(min(variant_numbers), max(variant_numbers))
 
-            return 'Invalid number "{}", valid variant are: {}'.format(number,  valid_numbers)
+            return 'Invalid number "{}", valid variants are: {}'.format(number,  valid_numbers)
 
         tv_series_data = tv_variants.variants[number]
         tv_series, created = TVSeries.objects.get_or_create(
