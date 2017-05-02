@@ -23,7 +23,7 @@ class TVSeries(TimeStampedModel):
             if self.number_of_seasons:
                 res += ' seasons: {};'.format(self.number_of_seasons)
             if self.last_air_date:
-                res += ' last episode date: {};'.format(self.last_air_date)
+                res += ' last episode date: {}'.format(self.last_air_date)
         return res
 
 

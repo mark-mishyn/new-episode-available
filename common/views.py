@@ -33,6 +33,12 @@ class HandleVkRequestView(APIView):
             'argument_required': False,
             'doc': 'Update information for all added TV-shows.',
         },
+        'remove_tv_show': {
+            'commands': ['remove', '-r'],
+            'argument_required': True,
+            'argument': 'number or \'all\'',
+            'doc': 'Remove all TV-shows from your list or all TV-shows.',
+        },
     }
 
     EMPTY_TV_SHOWS_MESSAGE = 'You don\'t have any added TV-shows'
@@ -142,6 +148,25 @@ class HandleVkRequestView(APIView):
         self._send_message('Updating information...')
         update_tv_shows_info()
         self._send_message('Updated list of TV-shows: \n{}'.format(self._get_tv_shows_list_str()))
+
+    def remove_tv_show(self, number_or_all):
+        if number_or_all == 'all':
+            self.vk_user.tv_series.all().delete()
+            return self._send_message('All TV-shows was removed.')
+
+        try:
+            number = int(number_or_all)
+        except (ValueError, TypeError):
+            return self._send_message('Invalid number.')
+
+        try:
+            tv_show = self.vk_user.tv_series.order_by('id')[number - 1]
+            tv_show_name = tv_show.name
+            tv_show.delete()
+        except IndexError:
+            self._send_message('Invalid number.')
+        else:
+            self._send_message('TV-show "{}" was removed.'.format(tv_show_name))
 
     def _send_message(self, message):
         return self.vk_client.send_message(user_id=self.user_id, message=message)
