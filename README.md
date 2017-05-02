@@ -1,4 +1,4 @@
-# New Episode Available VK Bot
+# VK Bot "New Episode Available"
 
 Bot for vk.com to notify users when new TV-shows episode is available!
 
