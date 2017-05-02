@@ -8,7 +8,7 @@ class TVSeries(TimeStampedModel):
     themoviedb_id = models.PositiveIntegerField(unique=True)
     name = models.CharField(max_length=255)
     original_name = models.CharField(max_length=255)
-    first_air_date = models.DateField()
+    first_air_date = models.DateField(blank=True, null=True)
     last_air_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
@@ -26,7 +26,4 @@ class VkUser(TimeStampedModel):
 class TVSeriesVariants(TimeStampedModel):
     variants = JSONField()
     vk_user = models.ForeignKey(VkUser, related_name='variants')
-
-    class Meta:
-        unique_together = [('vk_user', 'variants'), ]
 

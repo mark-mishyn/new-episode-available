@@ -8,6 +8,27 @@ from common.vk_client import VK, VkMessenger
 
 class HandleVkRequestView(APIView):
 
+    COMMAND_HANDLERS = {
+        'search_tv': {
+            'commands': ['search', '-s'],
+            'argument_required': True,
+            'argument_name': 'query',
+            'doc': 'Allow to search TV-shows by title',
+        },
+        'add_tv': {
+            'commands': ['add', '-a'],
+            'argument_required': True,
+            'argument_name': 'number',
+            'doc': 'Allow to add TV-show to your list after search. '
+                   'Usage: add <number_in_last_search_results>',
+        },
+        'get_users_tv_shows': {
+            'commands': ['list', '-l'],
+            'argument_required': False,
+            'doc': 'Show list of all added TV-shows.',
+        },
+    }
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.movie_client = MovieDbClient()
@@ -34,18 +55,27 @@ class HandleVkRequestView(APIView):
         if len(message_text.split()) > 1:
             command, arguments = message_text.split(' ', 1)
         else:
-            command, arguments = message_text, ''
+            command, arguments = message_text, None
 
-        if (command == 'search') and arguments:
-            self.search(arguments)
-        elif (command == 'add') and arguments:
-            self.add_tv(arguments)
-        else:
-            message = 'Invalid command "{}". Available commands are: "search", "add"'.format(
-                    command)
-            self.send_message(message)
+        for handler, params in self.COMMAND_HANDLERS.items():
+            if command in params['commands']:
+                if not params['argument_required']:
+                    return getattr(self, handler)()
 
-    def search(self, query):
+                if not arguments:
+                    return self.send_message(
+                        'Argument "{}" is required for command "{}"'.format(
+                                params['argument_name'], command))
+
+                return getattr(self, handler)(arguments)
+
+        all_commands_str = ', '.join(['{} ({})'.format(
+                c['commands'][0], c['commands'][1]) for c in self.COMMAND_HANDLERS.values()])
+        return self.send_message(
+                'Invalid command "{}". Available commands are: {}'.format(
+                        command, all_commands_str))
+
+    def search_tv(self, query):
         serials = self.movie_client.search(query)
 
         if not serials:
@@ -81,10 +111,13 @@ class HandleVkRequestView(APIView):
         tv_series, created = TVSeries.objects.get_or_create(
                 themoviedb_id=tv_series_data['id'],
                 name=tv_series_data['name'],
-                original_name=tv_series_data['original_name'],
-                first_air_date=tv_series_data['first_air_date'])
+                original_name=tv_series_data['original_name'])
+        if tv_series_data['first_air_date']:
+            tv_series.first_air_date = tv_series_data['first_air_date']
+            tv_series.save()
+
         self.vk_user.tv_series.add(tv_series)
-        return self.send_message('TV-show {} was added to your list.'.format(tv_series.name))
+        return self.send_message('TV-show "{}" was added to your list.'.format(tv_series.name))
 
     def send_message(self, message):
         return self.vk_client.send_message(user_id=self.user_id, message=message)
