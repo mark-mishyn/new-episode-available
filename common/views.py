@@ -112,12 +112,22 @@ class HandleVkRequestView(APIView):
                 themoviedb_id=tv_series_data['id'],
                 name=tv_series_data['name'],
                 original_name=tv_series_data['original_name'])
+
         if tv_series_data['first_air_date']:
             tv_series.first_air_date = tv_series_data['first_air_date']
             tv_series.save()
 
         self.vk_user.tv_series.add(tv_series)
         return self.send_message('TV-show "{}" was added to your list.'.format(tv_series.name))
+
+    def get_users_tv_shows(self):
+        tv_shows_list_str = ''
+        for i, tv_show in enumerate(self.vk_user.tv_series.order_by('id'), 1):
+            tv_shows_list_str += '{}. {}\n'.format(i, str(tv_show))
+        if tv_shows_list_str:
+            self.send_message(tv_shows_list_str)
+        else:
+            self.send_message('You don\'t have any added TV-shows')
 
     def send_message(self, message):
         return self.vk_client.send_message(user_id=self.user_id, message=message)

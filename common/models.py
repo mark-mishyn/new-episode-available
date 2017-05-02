@@ -10,9 +10,15 @@ class TVSeries(TimeStampedModel):
     original_name = models.CharField(max_length=255)
     first_air_date = models.DateField(blank=True, null=True)
     last_air_date = models.DateField(blank=True, null=True)
+    number_of_seasons = models.PositiveIntegerField(blank=True, null=True)
 
     def __str__(self):
-        return '{}, {} ({})'.format(self.name, self.first_air_date.year, self.original_name)
+        res = self.name
+        if self.first_air_date:
+            res += ', {}'.format(self.first_air_date.year)
+        if self.original_name != self.name:
+            res += ' ({})'.format(self.original_name)
+        return res
 
 
 class VkUser(TimeStampedModel):

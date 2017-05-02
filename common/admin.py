@@ -5,7 +5,8 @@ from common.models import TVSeries, VkUser, TVSeriesVariants
 
 @admin.register(TVSeries)
 class TVSeriesAdmin(admin.ModelAdmin):
-    list_display = ('themoviedb_id', 'name', 'original_name', 'first_air_date', 'created')
+    list_display = ('themoviedb_id', 'name', 'original_name', 'first_air_date', 'created',
+                    'number_of_seasons')
 
 
 @admin.register(VkUser)

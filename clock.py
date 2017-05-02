@@ -13,6 +13,9 @@ from django.conf import settings
 from common.models import VkUser, TVSeries
 
 
+# TODO add removing of old TVSeriesVariants
+
+
 scheduler = BlockingScheduler(timezone=settings.TIME_ZONE)
 
 
@@ -22,10 +25,15 @@ def scheduled_job():
     for tv in TVSeries.objects.all():
         if tv.vk_users.exists():
             tv_details = movie_client.get_details(tv.themoviedb_id)
+
+            if tv_details.get('number_of_seasons'):
+                tv.number_of_seasons = tv_details['number_of_seasons']
+
             last_air_date = tv_details.get('last_air_date')
             if last_air_date and tv.last_air_date != last_air_date:
                 tv.last_air_date = last_air_date
-                tv.save()
+
+            tv.save()
 
 
 @scheduler.scheduled_job('cron', hour=19)
@@ -42,4 +50,5 @@ def scheduled_job():
                     message='New episodes available! \n{}'.format('\n'.join(new_tv_seres_names)))
 
 
-scheduler.start()
+if __name__ == '__main__':
+    scheduler.start()
