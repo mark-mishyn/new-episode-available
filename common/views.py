@@ -110,16 +110,24 @@ class HandleVkRequestView(APIView):
                 resp_message = resp_message.replace('\n', '({})\n'.format(tv['original_name']))
         self._send_message(resp_message)
 
-        TVSeriesVariants.objects.get_or_create(vk_user=self.vk_user, variants=series_variants_dict)
+        TVSeriesVariants.objects.create(vk_user=self.vk_user, variants=series_variants_dict)
 
     def add_tv(self, number):
         tv_variants = TVSeriesVariants.objects.filter(vk_user=self.vk_user).latest('created')
         if not tv_variants:
             return self._send_message('You have to search first')
 
-        if number not in tv_variants.variants.keys():
+        variant_numbers = [int(n) for n in tv_variants.variants.keys()]
+        if number not in variant_numbers:
+            if len(variant_numbers) == 1:
+                valid_numbers = variant_numbers[0]
+            elif len(variant_numbers) == 2:
+                valid_numbers = '{}, {}'.format(min(variant_numbers), max(variant_numbers))
+            else:
+                valid_numbers = '{}-{}'.format(min(variant_numbers), max(variant_numbers))
+
             return self._send_message('Invalid number "{}", valid variant are: {}'.format(
-                    number,  ', '.join(tv_variants.variants.keys())))
+                    number,  valid_numbers))
 
         tv_series_data = tv_variants.variants[number]
         tv_series, created = TVSeries.objects.get_or_create(
