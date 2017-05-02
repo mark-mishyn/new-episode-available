@@ -46,6 +46,9 @@ class HandleVkRequestView(APIView):
     }
 
     EMPTY_TV_SHOWS_MESSAGE = 'You don\'t have any added TV-shows'
+    HELLO_MESSAGE = ('Use "search" command to find TV-shows and then "add" to add TV-shows to '
+                     'your list and start receiving notifications when new episodes of your '
+                     'favourite TV-series are available!')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -60,10 +63,16 @@ class HandleVkRequestView(APIView):
 
         event_data = request.data['object']
         self.user_id = event_data['user_id']
-        self.vk_user, created = VkUser.objects.get_or_create(vk_id=self.user_id)
+        self.vk_user, is_new_user = VkUser.objects.get_or_create(vk_id=self.user_id)
 
-        if event_type == 'message_new':
+        if is_new_user:
+            self._send_message(
+                'Hello!\n' + self.HELLO_MESSAGE + '\nSend message with text "help" to get help.')
+        elif event_type == 'message_new':
             self.message_new(event_data)
+        else:
+            print(event_type)
+            print(event_data)
 
         return HttpResponse('ok', status=200)
 
@@ -182,7 +191,7 @@ class HandleVkRequestView(APIView):
             return 'TV-show "{}" was removed.'.format(tv_show_name)
 
     def get_help(self):
-        resp_message = ''
+        resp_message = self.HELLO_MESSAGE + '\n'
 
         for handler in self.COMMAND_HANDLERS.values():
             resp_message += '({}) {}'.format(handler['commands'][1], handler['commands'][0])
