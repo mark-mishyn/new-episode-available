@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from rest_framework.views import APIView
 
+from clock import update_tv_shows_info
 from common.models import VkUser, TVSeriesVariants, TVSeries
 from common.themoviedb_client import MovieDbClient
 from common.vk_client import VK, VkMessenger
@@ -27,7 +28,14 @@ class HandleVkRequestView(APIView):
             'argument_required': False,
             'doc': 'Show list of all added TV-shows.',
         },
+        'update_tv_shows_info': {
+            'commands': ['update', '-u'],
+            'argument_required': False,
+            'doc': 'Update information for all added TV-shows.',
+        },
     }
+
+    EMPTY_TV_SHOWS_MESSAGE = 'You don\'t have any added TV-shows'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -63,7 +71,7 @@ class HandleVkRequestView(APIView):
                     return getattr(self, handler)()
 
                 if not arguments:
-                    return self.send_message(
+                    return self._send_message(
                         'Argument "{}" is required for command "{}"'.format(
                                 params['argument_name'], command))
 
@@ -71,7 +79,7 @@ class HandleVkRequestView(APIView):
 
         all_commands_str = ', '.join(['{} ({})'.format(
                 c['commands'][0], c['commands'][1]) for c in self.COMMAND_HANDLERS.values()])
-        return self.send_message(
+        return self._send_message(
                 'Invalid command "{}". Available commands are: {}'.format(
                         command, all_commands_str))
 
@@ -79,7 +87,7 @@ class HandleVkRequestView(APIView):
         serials = self.movie_client.search(query)
 
         if not serials:
-            self.send_message(
+            self._send_message(
                 message='Nothing found with '"{}"', try with another search query.'.format(query))
 
         series_variants_dict = {}
@@ -94,17 +102,17 @@ class HandleVkRequestView(APIView):
 
             if tv['original_name'] != tv['name']:
                 resp_message = resp_message.replace('\n', '({})\n'.format(tv['original_name']))
-        self.send_message(resp_message)
+        self._send_message(resp_message)
 
         TVSeriesVariants.objects.get_or_create(vk_user=self.vk_user, variants=series_variants_dict)
 
     def add_tv(self, number):
         tv_variants = TVSeriesVariants.objects.filter(vk_user=self.vk_user).latest('created')
         if not tv_variants:
-            return self.send_message('You have to search first')
+            return self._send_message('You have to search first')
 
         if number not in tv_variants.variants.keys():
-            return self.send_message('Invalid number "{}", valid variant are: {}'.format(
+            return self._send_message('Invalid number "{}", valid variant are: {}'.format(
                     number,  ', '.join(tv_variants.variants.keys())))
 
         tv_series_data = tv_variants.variants[number]
@@ -118,17 +126,28 @@ class HandleVkRequestView(APIView):
             tv_series.save()
 
         self.vk_user.tv_series.add(tv_series)
-        return self.send_message('TV-show "{}" was added to your list.'.format(tv_series.name))
+        return self._send_message('TV-show "{}" was added to your list.'.format(tv_series.name))
 
     def get_users_tv_shows(self):
+        tv_shows_list_str = self._get_tv_shows_list_str()
+        if tv_shows_list_str:
+            self._send_message(tv_shows_list_str)
+        else:
+            self._send_message(self.EMPTY_TV_SHOWS_MESSAGE)
+
+    def update_tv_shows_info(self):
+        if not self.vk_user.tv_series.exists():
+            return self._send_message(self.EMPTY_TV_SHOWS_MESSAGE)
+
+        self._send_message('Updating information...')
+        update_tv_shows_info()
+        self._send_message('Updated list of TV-shows: \n{}'.format(self._get_tv_shows_list_str()))
+
+    def _send_message(self, message):
+        return self.vk_client.send_message(user_id=self.user_id, message=message)
+
+    def _get_tv_shows_list_str(self):
         tv_shows_list_str = ''
         for i, tv_show in enumerate(self.vk_user.tv_series.order_by('id'), 1):
             tv_shows_list_str += '{}. {}\n'.format(i, str(tv_show))
-        if tv_shows_list_str:
-            self.send_message(tv_shows_list_str)
-        else:
-            self.send_message('You don\'t have any added TV-shows')
-
-    def send_message(self, message):
-        return self.vk_client.send_message(user_id=self.user_id, message=message)
-
+        return tv_shows_list_str

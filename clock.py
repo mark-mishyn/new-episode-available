@@ -19,8 +19,7 @@ from common.models import VkUser, TVSeries
 scheduler = BlockingScheduler(timezone=settings.TIME_ZONE)
 
 
-@scheduler.scheduled_job('cron', day_of_week='mon', hour=12)
-def scheduled_job():
+def update_tv_shows_info():
     movie_client = MovieDbClient()
     for tv in TVSeries.objects.all():
         if tv.vk_users.exists():
@@ -36,8 +35,13 @@ def scheduled_job():
             tv.save()
 
 
+@scheduler.scheduled_job('cron', day_of_week='mon', hour=12)
+def update_tv_shows_info_job():
+    update_tv_shows_info()
+
+
 @scheduler.scheduled_job('cron', hour=19)
-def scheduled_job():
+def notify_users_if_new_episode_available():
     vk_client = VkMessenger()
 
     yesterday_date = now().date() - timedelta(days=1)

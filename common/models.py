@@ -18,6 +18,12 @@ class TVSeries(TimeStampedModel):
             res += ', {}'.format(self.first_air_date.year)
         if self.original_name != self.name:
             res += ' ({})'.format(self.original_name)
+        if self.last_air_date or self.number_of_seasons:
+            res += '\n'
+            if self.number_of_seasons:
+                res += ' seasons: {};'.format(self.number_of_seasons)
+            if self.last_air_date:
+                res += ' last episode date: {};'.format(self.last_air_date)
         return res
 
 
