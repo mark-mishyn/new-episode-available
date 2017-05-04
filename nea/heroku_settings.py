@@ -1,4 +1,4 @@
-from .base import *
+from .settings import *
 import dj_database_url
 
 ALLOWED_HOSTS = ['an-ansia.herokuapp.com', ]
