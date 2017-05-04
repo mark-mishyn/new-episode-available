@@ -1,0 +1,7 @@
+[2017-05-04 11:31:25 +0300] [9624] [INFO] Starting gunicorn 19.7.1
+[2017-05-04 11:31:25 +0300] [9624] [INFO] Listening at: http://0.0.0.0:5000 (9624)
+[2017-05-04 11:31:25 +0300] [9624] [INFO] Using worker: sync
+[2017-05-04 11:31:25 +0300] [9630] [INFO] Booting worker with pid: 9630
+[2017-05-04 11:31:47 +0300] [9624] [INFO] Handling signal: int
+[2017-05-04 11:31:47 +0300] [9630] [INFO] Worker exiting (pid: 9630)
+[2017-05-04 11:31:47 +0300] [9624] [INFO] Shutting down: Master
