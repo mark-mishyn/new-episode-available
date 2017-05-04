@@ -34,12 +34,13 @@ def update_tv_shows_info():
                 tv.seasons = tv_details['seasons']
 
                 for season in tv_details['seasons']:
-                    season_date = parse_date(season['air_date'])
-                    if season_date < today_date:
-                        for week_num in range(season['episode_count']):
-                            episode_date = season_date + timedelta(weeks=week_num)
-                            if episode_date <= today_date:
-                                tv.last_available_episode_date = episode_date
+                    if season.get('air_date'):
+                        season_date = parse_date(season['air_date'])
+                        if season_date < today_date:
+                            for week_num in range(season['episode_count']):
+                                episode_date = season_date + timedelta(weeks=week_num)
+                                if episode_date <= today_date:
+                                    tv.last_available_episode_date = episode_date
 
             tv.save()
 
