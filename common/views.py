@@ -153,6 +153,8 @@ class HandleVkRequestView(APIView):
             tv_series.first_air_date = tv_series_data['first_air_date']
             tv_series.save()
 
+        tv_series.update_last_available_episode_date()
+
         self.vk_user.tv_series.add(tv_series)
         return 'TV-show "{}" was added to your list.'.format(tv_series.name)
 
@@ -168,7 +170,8 @@ class HandleVkRequestView(APIView):
             return self.EMPTY_TV_SHOWS_MESSAGE
 
         self._send_message('Updating information...')
-        update_tv_shows_info()
+        for tv in TVSeries.objects.filter(vk_users=self.vk_user):
+            tv.update_last_available_episode_date()
         return 'Updated list of TV-shows: \n{}'.format(self._get_tv_shows_list_str())
 
     def remove_tv_show(self, number_or_all):
