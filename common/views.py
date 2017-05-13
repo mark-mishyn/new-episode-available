@@ -1,7 +1,6 @@
 from django.http import HttpResponse
 from rest_framework.views import APIView
 
-from clock import update_tv_shows_info
 from common.models import VkUser, TVSeriesVariants, TVSeries
 from common.themoviedb_client import MovieDbClient
 from common.vk_client import VK, VkMessenger
